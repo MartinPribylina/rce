@@ -9,7 +9,7 @@ class MainMenu(QWidget):
         self.switch_screen = switch_screen
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(50, 100, 50, 100)  # Nastavenie paddingu (ľavý, horný, pravý, dolný)
+        layout.setContentsMargins(50, 100, 50, 100)
 
         self.train_button = QPushButton("Train RCE Network")
         self.create_dataset_button = QPushButton("Create Training Dataset")

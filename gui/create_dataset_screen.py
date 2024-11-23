@@ -18,7 +18,7 @@ class CreateDatasetScreen(QWidget):
 
         main_layout = QHBoxLayout()
 
-        self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
+        self.canvas = MplCanvas(self)
         main_layout.addWidget(self.canvas)
 
         controls_widget = QWidget()

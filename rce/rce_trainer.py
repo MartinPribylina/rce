@@ -3,7 +3,7 @@ from rce.rce_network import HiddenNeuron, RceNetwork
 from data.point import Point
 
 class RceTrainer:
-    def __init__(self):
+    def __init__(self, r_max: int = 3):
         """
         Initialize RCE Trainer.
 
@@ -16,7 +16,8 @@ class RceTrainer:
         self.training_done = False
             Flag indicating if training is done.
         """
-        self.rce_network : RceNetwork = RceNetwork()
+        self.r_max = r_max
+        self.rce_network : RceNetwork = RceNetwork(self.r_max)
         self.rce_networks : list[RceNetwork] = []
         self.training_done = False
 
@@ -45,7 +46,7 @@ class RceTrainer:
                 training_point : Point = training_input[self.rce_network.train_input_index]
                 self.rce_network.index_of_hidden_neuron = 0
                 self.rce_network.comment = ""
-                self.rce_network.last_action = ""
+                self.rce_network.action = ""
                 while self.rce_network.index_of_hidden_neuron < len(self.rce_network.hidden_layer):
                     hidden_neuron : HiddenNeuron = self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron]
                     # Calculate distance between training point and hidden neuron
@@ -94,8 +95,8 @@ class RceTrainer:
         self.rce_network.train_input_index = 0
         self.rce_network.index_of_hidden_neuron = 0
         self.rce_network.iteration = 1
-        self.rce_network : RceNetwork = RceNetwork()
-        self.rce_network.last_action = "No action - new network was created"
+        self.rce_network : RceNetwork = RceNetwork(self.r_max)
+        self.rce_network.action = "No action - new network was created"
         self.rce_networks : list[RceNetwork] = [copy.deepcopy(self.rce_network)]
         self.training_done = False
 

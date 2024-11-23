@@ -1,34 +1,7 @@
 from data.input_data import Point
+from rce.hidden_neuron import HiddenNeuron
+from rce.output_neuron import OutputNeuron
 
-class HiddenNeuron():
-    def __init__(self, weights, activation):
-        """
-        Initialize HiddenNeuron with given weights and activation radius.
-
-        :param weights: List of two floats, weights of the neuron.
-        :param activation: Float, activation radius of the neuron.
-        """
-        self.weights = weights
-        self.activation = activation
-        self.output_neuron = None
-
-    def __str__(self):
-        str = "[{}, r={}, output={}]" .format(self.weights, self.activation, self.output_neuron)
-        return str
-
-class OutputNeuron():
-    def __init__(self, class_name):
-        """
-        Initialize OutputNeuron with a given class name.
-
-        :param class_name: The class name associated with the output neuron.
-        """
-        self.class_name = class_name
-    
-    def __str__(self):
-        x = "[{}]" .format(self.class_name)
-        return x
-    
 class RceNetwork():
     def __init__(self, r_max: int = 3):
         """
@@ -45,7 +18,7 @@ class RceNetwork():
         self.output_layer : list[OutputNeuron] = []
         self.iteration = 0
         self.comment = ""
-        self.last_action = ""
+        self.action = ""
 
     def __str__(self):
         output_message = "######################\n"
@@ -53,9 +26,10 @@ class RceNetwork():
         output_message += f"iteration: {self.iteration}\n"
         output_message += f"index of train vector: {self.train_input_index}\n"
         output_message += f"index of hidden neuron: {self.index_of_hidden_neuron}\n"
-        output_message += f"last action: {self.last_action}\n"
+        output_message += f"action: {self.action}\n"
         output_message += f"{self.comment}\n"
         output_message += "----------------------\n"
+        output_message += f"r_max: {self.r_max}\n"
         output_message += f"neurons in hidden layer: {len(self.hidden_layer)}\n"
         output_message += f"neurons in output layer: {len(self.output_layer)}\n"
         output_message += f"change in network: {self.modification}\n"
@@ -80,7 +54,7 @@ class RceNetwork():
 
         :param training_point: The location of the new hidden neuron.
         """
-        self.last_action = "Adding new hidden neuron at ({},{}) r = {}" .format(training_point.x, training_point.y, self.r_max)
+        self.action = "Adding new hidden neuron at ({},{}) r = {}" .format(training_point.x, training_point.y, self.r_max)
         new_hidden_neuron = HiddenNeuron([training_point.x, training_point.y], self.r_max)
         self.modification = True
         self.hidden_layer.append(new_hidden_neuron)
@@ -89,12 +63,12 @@ class RceNetwork():
         for output_neuron in self.output_layer:
             if output_neuron.class_name == training_point.class_name:
                 new_hidden_neuron.output_neuron = output_neuron
-                self.last_action += "; Output neuron already existed for class {}" .format(training_point.class_name)
+                self.action += "; Output neuron already existed for class {}" .format(training_point.class_name)
                 return
         
         # Output neuron for class does not exist, create a new one
         new_output_neuron = OutputNeuron(training_point.class_name)
         new_hidden_neuron.output_neuron = new_output_neuron
         self.output_layer.append(new_output_neuron)
-        self.last_action += "; Adding new output neuron {}" .format(new_output_neuron)
+        self.action += "; Adding new output neuron {}" .format(new_output_neuron)
         

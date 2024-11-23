@@ -6,8 +6,11 @@ from data.my_exceptions import AlreadyExists
 from gui.mpl_canvas import MplCanvas
 from data.input_data import InputData
 from rce.rce_trainer import RceTrainer
-from .styles import get_button_style
+from .styles import get_button_style, get_font_size_12_style
 
+info_text = "Welcome to RCE training screen!\n1. Load dataset\n2. Train network\n3. Use arrows to step through the training process\n"
+info_text += "<<< - skips to first training iteration\n>>> - skips to last training iteration\n<< - skips to beggining of iteration or previous training iteration if currently positioned on first training input\n"
+info_text += ">> - skips to end of iteration or next training iteration if currently positioned on last training input\n < - skips to previous training input\n > - skips to next training input"
 
 class TrainNetworkScreen(QWidget):
     def __init__(self, switch_screen):
@@ -52,34 +55,23 @@ class TrainNetworkScreen(QWidget):
         # Navigation buttons
         nav_layout = QHBoxLayout()
 
-        first_epoch_button = self.build_first_epoch_button()
-        nav_layout.addWidget(first_epoch_button)
-
-        prev_epoch_button = self.build_prev_epoch_button()
-        nav_layout.addWidget(prev_epoch_button)
-
-        prev_step_button = self.build_prev_step_button()
-        nav_layout.addWidget(prev_step_button)
-
-        next_step_button = self.build_next_step_button()
-        nav_layout.addWidget(next_step_button)
-
-        next_epoch_button = self.build_next_epoch_button()
-        nav_layout.addWidget(next_epoch_button)
-
-        last_epoch_button = self.build_last_epoch_button()
-        nav_layout.addWidget(last_epoch_button)
+        nav_layout.addWidget(self.build_button("<<<", self.first_epoch))
+        nav_layout.addWidget(self.build_button("<<", self.prev_epoch))
+        nav_layout.addWidget(self.build_button("<", self.prev_step))
+        nav_layout.addWidget(self.build_button(">", self.next_step))
+        nav_layout.addWidget(self.build_button(">>", self.next_epoch))
+        nav_layout.addWidget(self.build_button(">>>", self.last_epoch))
 
         main_layout.addLayout(nav_layout)
 
         # Control buttons layout
         controls_layout = QVBoxLayout()
 
-        load_data_button = self.build_load_data_button()
+        load_data_button = self.build_button("Load Data", self.load_data)
         controls_layout.addWidget(load_data_button)
 
         # Train Network button
-        train_network_button = self.build_train_network_button()
+        train_network_button = self.build_button("Train Network", self.train_network)
         controls_layout.addWidget(train_network_button)
 
         # R max input
@@ -94,8 +86,14 @@ class TrainNetworkScreen(QWidget):
         train_widget.setLayout(train_layout)
         controls_layout.addWidget(train_widget)
 
+        # Show results
+        show_results_button = self.build_button("Show results", self.show_results)
+        controls_layout.addWidget(show_results_button)
+        # Help button
+        help_button = self.build_button("Help", self.showHelp)
+        controls_layout.addWidget(help_button)
         # Back button
-        back_button = self.build_back_button()
+        back_button = self.build_button("Back", self.goBack)
         controls_layout.addWidget(back_button)
 
         controls_layout.setAlignment(Qt.AlignTop)
@@ -108,86 +106,70 @@ class TrainNetworkScreen(QWidget):
 
         self.setLayout(main_layout)
 
+    
+    def showHelp(self):
+        QMessageBox.information(self, "Help", info_text)
+    def show_results(self):
+        if self.rce_trainer is None:
+            QMessageBox.warning(self, "No results", "No trained network yet.")
+            return
+
+        last_network = self.rce_trainer.rce_networks[-1]
+
+        # Create HTML formatted output
+        output = "<h2>RCE Network</h2>"
+        output += "<p><b>Hidden neurons:</b> {}</p>".format(len(last_network.hidden_layer))
+        output += "<p><b>Output neurons:</b> {}</p>".format(len(last_network.output_layer))
+        output += "<p><b>R max:</b> {}</p>".format(last_network.r_max)
+
+        output += "<h3>Output neurons:</h3>"
+        for neuron in last_network.output_layer:
+            output += "<p>{}</p>".format(neuron)
+
+        output += "<h3>Hidden neurons:</h3>"
+        for neuron in last_network.hidden_layer:
+            output += "<p>{}</p>".format(neuron)
+
+        QMessageBox.information(self, "RCE Network", output)
+
+
     def build_info_label(self):
-        self.info_label = QLabel(
-            "Welcome to RCE training screen!\n1. Load dataset\n2. Train network\n3. Use arrows to step through the training process\n"
-            "<<< - skips to first training iteration\n>>> - skips to last training iteration\n<< - skips to beggining of iteration or previous training iteration if currently positioned on first training input\n"
-            ">> - skips to end of iteration or next training iteration if currently positioned on last training input\n < - skips to previous training input\n > - skips to next training input",
-            self)
+        self.info_label = QLabel(info_text, self)
         self.info_label.setAlignment(Qt.AlignTop)
         self.info_label.setStyleSheet("QLabel { background-color : white; border: 1px solid black; }")
         self.info_label.setFixedWidth(200)
         self.info_label.setWordWrap(True)
 
-    def build_back_button(self):
-        back_button = QPushButton("Back", self)
-        back_button.setStyleSheet(get_button_style())
-        back_button.clicked.connect(self.goBack)
-        return back_button
-
-    def build_train_network_button(self):
-        train_network_button = QPushButton("Train Network", self)
-        train_network_button.setStyleSheet(get_button_style())
-        train_network_button.clicked.connect(self.train_network)
-        return train_network_button
-
-    def build_load_data_button(self):
-        load_data_button = QPushButton("Load Data", self)
-        load_data_button.setStyleSheet(get_button_style())
-        load_data_button.clicked.connect(self.load_data)
-        return load_data_button
-
-    def build_last_epoch_button(self):
-        last_epoch_button = QPushButton(">>>", self)
-        last_epoch_button.setStyleSheet(get_button_style())
-        last_epoch_button.clicked.connect(self.last_epoch)
-        return last_epoch_button
-
-    def build_next_epoch_button(self):
-        next_epoch_button = QPushButton(">>", self)
-        next_epoch_button.setStyleSheet(get_button_style())
-        next_epoch_button.clicked.connect(self.next_epoch)
-        return next_epoch_button
-
-    def build_next_step_button(self):
-        next_step_button = QPushButton(">", self)
-        next_step_button.setStyleSheet(get_button_style())
-        next_step_button.clicked.connect(self.next_step)
-        return next_step_button
-
-    def build_prev_step_button(self):
-        prev_step_button = QPushButton("<", self)
-        prev_step_button.setStyleSheet(get_button_style())
-        prev_step_button.clicked.connect(self.prev_step)
-        return prev_step_button
-
-    def build_prev_epoch_button(self):
-        prev_epoch_button = QPushButton("<<", self)
-        prev_epoch_button.setStyleSheet(get_button_style())
-        prev_epoch_button.clicked.connect(self.prev_epoch)
-        return prev_epoch_button
-
-    def build_first_epoch_button(self):
-        first_epoch_button = QPushButton("<<<", self)
-        first_epoch_button.setStyleSheet(get_button_style())
-        first_epoch_button.clicked.connect(self.first_epoch)
-        return first_epoch_button
+    def build_button(self, title, function = None):
+        button = QPushButton(title, self)
+        button.setStyleSheet(get_button_style())
+        if function is not None:
+            button.clicked.connect(function)
+        return button
 
     def build_progress_info(self):
         progress_info_layout = QVBoxLayout()
-        self.iteration_label = QLabel("Iteration: None", self)
-        self.iteration_label.setAlignment(Qt.AlignLeft)
-        self.training_vector_label = QLabel("Training Vector: None", self)
-        self.training_vector_label.setAlignment(Qt.AlignLeft)
-        self.action_label = QLabel("Action: None", self)
-        self.action_label.setAlignment(Qt.AlignLeft)
-        self.comment_label = QLabel("Comment: None", self)
-        self.comment_label.setAlignment(Qt.AlignLeft)
-        progress_info_layout.addWidget(self.iteration_label)
-        progress_info_layout.addWidget(self.training_vector_label)
+        iteration__training_layout = QHBoxLayout()
+        self.iteration_label = self.build_label("Iteration: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
+        self.training_vector_label = self.build_label("Training Vector: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
+        self.filename_label = self.build_label("File Name: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
+        self.action_label = self.build_label("Action: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
+        self.comment_label = self.build_label("Comment: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
+        iteration__training_layout.addWidget(self.iteration_label)
+        iteration__training_layout.addWidget(self.training_vector_label)
+        iteration__training_layout.addWidget(self.filename_label)
+        progress_info_layout.addLayout(iteration__training_layout)
         progress_info_layout.addWidget(self.action_label)
         progress_info_layout.addWidget(self.comment_label)
         return progress_info_layout
+
+    def build_label(self, text, alignment = None, style:str = None):
+        label = QLabel(text, self)
+        if alignment:
+            label.setAlignment(alignment)
+        if style:
+            label.setStyleSheet(style)
+        return label
 
     def build_header(self):
         header_label = QLabel("RCE Network", self)
@@ -205,6 +187,7 @@ class TrainNetworkScreen(QWidget):
                     parsed_data = json.loads(f.read())
                     self.input = InputData(parsed_data)
                     self.training_data = list(self.input.data.values())
+                self.filename_label.setText("File Name: {}".format(file_name.split("/")[-1]))
                 self.info_label.setText("Dataset loaded successfully!\nReady for training.")
                 QMessageBox.information(self, "Loading Finished", "Dataset was loaded successfully!")
                 self.train_network()
@@ -250,21 +233,24 @@ class TrainNetworkScreen(QWidget):
         self.canvas.ax.set_ylim(y_min, y_max)
 
         for point in self.training_data:
-            self.canvas.ax.scatter(point.x, point.y, color=point.class_name)
+            self.canvas.ax.scatter(point.x, point.y, s=80, color=point.class_name)
 
         
         self.info_label.setText(current_network.__str__())
+        # Show neurons
         for neuron in current_network.hidden_layer:
-            circle = plt.Circle((neuron.weights[0], neuron.weights[1]), neuron.activation, color=neuron.output_neuron.class_name, fill=False, linewidth=2)
+            circle = plt.Circle((neuron.weights[0], neuron.weights[1]), neuron.activation, color=neuron.output_neuron.class_name, fill=False, linewidth=3)
             self.canvas.ax.add_artist(circle)
 
-        if len(current_network.hidden_layer) > 0 and current_network.index_of_hidden_neuron is not None:
-            current_hidden_neuron = current_network.hidden_layer[current_network.index_of_hidden_neuron]
-            circle = plt.Circle((current_hidden_neuron.weights[0], current_hidden_neuron.weights[1]), current_hidden_neuron.activation, color="yellow", fill=False, linewidth=1)
-            self.canvas.ax.add_artist(circle)
+        if self.rce_current_network_index != len(self.rce_trainer.rce_networks) - 1 and self.rce_current_network_index != 0:
+            # Show current action
+            if len(current_network.hidden_layer) > 0 and current_network.index_of_hidden_neuron is not None:
+                current_hidden_neuron = current_network.hidden_layer[current_network.index_of_hidden_neuron]
+                circle = plt.Circle((current_hidden_neuron.weights[0], current_hidden_neuron.weights[1]), current_hidden_neuron.activation, color="yellow", fill=False, linewidth=1)
+                self.canvas.ax.add_artist(circle)
 
-        current_input = list(self.input.data.values())[current_network.train_input_index if current_network.train_input_index is not None else 0]
-        self.canvas.ax.scatter(current_input.x, current_input.y, s=15, color="yellow")
+            current_input = list(self.input.data.values())[current_network.train_input_index if current_network.train_input_index is not None else 0]
+            self.canvas.ax.scatter(current_input.x, current_input.y, s=15, color="yellow")
 
         self.canvas.draw()
 

@@ -51,13 +51,9 @@ class InputData:
         Raises:
             Exception: If an invalid point is provided.
         """
-        try:
-            if self.contains_point(point):
-                self.data.pop(point.key())
-                return True
-            print("Remove Point: Point does not exist")
-        except Exception:
-            print("Remove Point: Invalid Point")
+        if self.contains_point(point):
+            self.data.pop(point.key())
+            return True
 
         return False
 

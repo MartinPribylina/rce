@@ -29,3 +29,10 @@ def get_red_button_style():
         background-color: #f95348;
     }
     """
+
+def get_font_size_12_style():
+    return """
+    QLabel {
+        font-size: 16px;
+    }
+    """

@@ -84,7 +84,6 @@ class RceTrainer:
             self.rce_network.iteration += 1
 
         self.training_done = True
-        print(self.rce_network)
 
     def set_initial_state_for_training(self):
         """

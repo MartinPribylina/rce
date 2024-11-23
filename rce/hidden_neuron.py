@@ -11,5 +11,5 @@ class HiddenNeuron():
         self.output_neuron = None
 
     def __str__(self):
-        str = "[{}, r={}, output={}]" .format(self.weights, self.activation, self.output_neuron)
+        str = "[{}, r={:.2f}, output={}]" .format(self.weights, self.activation, self.output_neuron)
         return str

@@ -12,10 +12,12 @@ import json
 class CreateDatasetScreen(QWidget):
     def __init__(self, switch_screen):
         super().__init__()
-        self.graph_border = 1.5
+        self.graph_border_offset = 1.5
         self.switch_screen = switch_screen
         self.input = InputData()
-
+        self.initUI()
+    
+    def initUI(self):
         main_layout = QHBoxLayout()
 
         self.canvas = MplCanvas(self)
@@ -26,12 +28,9 @@ class CreateDatasetScreen(QWidget):
         controls_layout = QVBoxLayout()
         controls_widget.setLayout(controls_layout)
 
-        save_button = QPushButton("Save Dataset")
-        load_button = QPushButton("Load Dataset")
-        back_button = QPushButton("Back")
-        save_button.setStyleSheet(get_button_style())
-        load_button.setStyleSheet(get_button_style())
-        back_button.setStyleSheet(get_button_style())
+        save_button = self.build_button("Save Dataset", self.save_dataset)
+        load_button = self.build_button("Load Dataset", self.load_dataset)
+        back_button = self.build_button("Back", lambda: self.switch_screen("main_menu"))
         general_button_layout = QVBoxLayout()
         general_button_layout.addWidget(save_button)
         general_button_layout.addWidget(load_button)
@@ -63,11 +62,10 @@ class CreateDatasetScreen(QWidget):
         class_layout.addWidget(self.class_input)
         form_layout.addLayout(class_layout)
 
-        add_point_button = QPushButton("Add Point")
-        add_point_button.setStyleSheet(get_button_style())
+        add_point_button = self.build_button("Add Point", self.add_point)
         form_layout.addWidget(add_point_button)
 
-        remove_point_button = QPushButton("Remove Point")
+        remove_point_button = self.build_button("Remove Point", self.remove_point)
         remove_point_button.setStyleSheet(get_red_button_style())
         form_layout.addWidget(remove_point_button)
 
@@ -77,13 +75,25 @@ class CreateDatasetScreen(QWidget):
 
         self.setLayout(main_layout)
 
-        add_point_button.clicked.connect(self.add_point)
-        remove_point_button.clicked.connect(self.remove_point)
-        save_button.clicked.connect(self.save_dataset)
-        load_button.clicked.connect(self.load_dataset)
-        back_button.clicked.connect(lambda: self.switch_screen("main_menu"))
-
+    def build_button(self, title, function = None):
+        button = QPushButton(title, self)
+        button.setStyleSheet(get_button_style())
+        if function is not None:
+            button.clicked.connect(function)
+        return button
+    
     def add_point(self):
+        """
+        Adds a point to the InputData object if it does not already exist.
+
+        Attempts to extract float values from the x and y input fields, and
+        the class name from the class name input field. If the point does not
+        already exist in the InputData object, it is added and the point is
+        plotted on the graph. If the point already exists, a warning message
+        is displayed. If the input is invalid, an error message is displayed.
+
+        :return: None
+        """
         try:
             x = float(self.x_input.text())
             y = float(self.y_input.text())
@@ -92,8 +102,8 @@ class CreateDatasetScreen(QWidget):
             self.canvas.ax.scatter(x, y, color=point.get_color(), label=point.class_name)
             x_values = [point.x for point in self.input.data.values()] if self.input.data else [0]
             y_values = [point.y for point in self.input.data.values()] if self.input.data else [0]
-            x_min, x_max = min(x_values) - self.graph_border, max(x_values) + self.graph_border
-            y_min, y_max = min(y_values) - self.graph_border, max(y_values) + self.graph_border
+            x_min, x_max = min(x_values) - self.graph_border_offset, max(x_values) + self.graph_border_offset
+            y_min, y_max = min(y_values) - self.graph_border_offset, max(y_values) + self.graph_border_offset
 
             self.canvas.ax.set_xlim(x_min, x_max)
             self.canvas.ax.set_ylim(y_min, y_max)
@@ -101,18 +111,32 @@ class CreateDatasetScreen(QWidget):
 
         except AlreadyExists:
             QMessageBox.warning(self, "Warning", "Point already exists!\nPoint {}".format(point))
-        except ValueError:
-            print("Invalid input")
+        except ValueError as e:
+            QMessageBox.warning(self, "Warning", "Invalid input: {}".format(e))
 
     def remove_point(self):
+        """
+        Removes a point from the InputData object if it exists.
+
+        Attempts to extract float values from the x and y input fields, and
+        the class name from the class name input field. If the point exists in
+        the InputData object, it is removed and all points are re-plotted on the
+        graph. If the point does not exist, a warning message is displayed. If
+        the input is invalid, an error message is displayed.
+
+        :return: None
+        """
         try:
             x = float(self.x_input.text())
             y = float(self.y_input.text())
             point = Point(x, y, self.class_input.currentText())
-            self.input.remove_point(point)
-            self.redraw_all_points()
-        except Exception:
-            print("Invalid input")
+            removed =self.input.remove_point(point)
+            if removed:
+                self.redraw_all_points()
+            else:
+                QMessageBox.warning(self, "Warning", "Point which you are trying to remove does not exist!\nPoint {}".format(point))
+        except ValueError as e:
+            QMessageBox.warning(self, "Warning", "Invalid input: {}".format(e))
 
     def redraw_all_points(self):
         try:
@@ -125,6 +149,14 @@ class CreateDatasetScreen(QWidget):
             print("Invalid input")
 
     def load_dataset(self):
+        """
+        Attempts to load a dataset from a JSON file.
+
+        If the dataset contains duplicated points, a warning message is displayed. 
+        If the input is invalid, an error message is displayed.
+
+        :return: None
+        """
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self, "Load Dataset", "", "JSON Files (*.json);;All Files (*)", options=options)
         try:
@@ -140,13 +172,21 @@ class CreateDatasetScreen(QWidget):
             QMessageBox.warning(self, "Warning", "An error occurred while loading the dataset!\nError: {}".format(e))
 
     def save_dataset(self):
+        """
+        Saves the current dataset list(Point) to a JSON file.
+
+        :return: None
+        """
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Dataset", "", "JSON Files (*.json);;All Files (*)", options=options)
-        if file_name:
-            with open(file_name, 'w') as f:
-                jsonSerializer = JsonSerializer()
-                json_output = jsonSerializer.serialize(list(self.input.data.values()))
-                print(json_output)
-                f.write(json_output)
+        try:
+            if file_name:
+                with open(file_name, 'w') as f:
+                    jsonSerializer = JsonSerializer()
+                    json_output = jsonSerializer.serialize(list(self.input.data.values()))
+                    print(json_output)
+                    f.write(json_output)
 
-            QMessageBox.information(self, "Saving Finished", f"Dataset successfully saved to {file_name}!")
+                QMessageBox.information(self, "Saving Finished", f"Dataset successfully saved to {file_name}!")
+        except Exception as e:
+            QMessageBox.warning(self, "Warning", "An error occurred while saving the dataset!\nError: {}".format(e))

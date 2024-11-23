@@ -19,16 +19,19 @@ class RceTrainer:
         self.rce_network.hidden_layer = []
         self.rce_network.output_layer = []
         self.rce_network.train_input_index = 0
+        self.rce_network.index_of_hidden_neuron = 0
+        self.rce_network.iteration = 1
         self.rce_network : RceNetwork = RceNetwork()
+        self.rce_network.last_action = "No action - new network was created"
         self.rce_networks : list[RceNetwork] = [copy.deepcopy(self.rce_network)]
         self.training_done = False
 
         # Initialize first neuron
-        self.rce_network.iteration = 1
         training_point = training_input[self.rce_network.train_input_index]
         self.rce_network.modification = True
         self.rce_network.add_new_neuron(training_point)
         self.rce_network.train_input_index += 1
+        self.rce_network.comment = "First hidden neuron was added"
         # Add copy after first neuron
         self.rce_networks.append(copy.deepcopy(self.rce_network))
 
@@ -39,20 +42,25 @@ class RceTrainer:
             while self.rce_network.train_input_index < len(training_input):
                 self.rce_network.hit = False
                 # Go through all hidden neurons (hyperspheres)
-                training_point = training_input[self.rce_network.train_input_index]
+                training_point : Point = training_input[self.rce_network.train_input_index]
                 self.rce_network.index_of_hidden_neuron = 0
+                self.rce_network.comment = ""
+                self.rce_network.last_action = ""
                 while self.rce_network.index_of_hidden_neuron < len(self.rce_network.hidden_layer):
-                    hidden_neuron = self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron]
+                    hidden_neuron : HiddenNeuron = self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron]
                     distance = self.calculate_distance(training_point, hidden_neuron)
 
-                    if distance > self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron].activation:
-                        pass
-                    elif self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron].output_neuron.class_name == training_point.class_name:
-                        self.rce_network.hit = True
+                    if distance <= hidden_neuron.activation:
+                        if hidden_neuron.output_neuron.class_name == training_point.class_name:
+                            self.rce_network.hit = True
+                            self.rce_network.comment = "Comparing training point {} to hidden neuron {} - hit, class matches".format(training_point, hidden_neuron)
+                        else:
+                            self.rce_network.comment = "Comparing training point {} to hidden neuron {} - hit, class doesn't match".format(training_point, hidden_neuron)
+                            hidden_neuron.activation = distance / 2
+                            self.rce_network.comment += " - updating hiddent neuron to {}" .format(self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron])
+                            self.rce_network.modification = True
                     else:
-                        self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron].activation = distance / 2
-                        self.rce_network.modification = True
-                    
+                        self.rce_network.comment = "Comparing training point {} to hidden neuron {} - no hit".format(training_point, hidden_neuron)
                     # Make a copy of current training progress
                     self.rce_networks.append(copy.deepcopy(self.rce_network))
                     self.rce_network.index_of_hidden_neuron += 1
@@ -60,6 +68,8 @@ class RceTrainer:
                 if not self.rce_network.hit:
                     self.rce_network.add_new_neuron(training_point)
                     self.rce_network.modification = True
+                    self.rce_network.comment = "No sufficient hidden neuron for training point {} - adding new hidden neuron".format(training_point)
+                    self.rce_networks.append(copy.deepcopy(self.rce_network))
                 
                 self.rce_network.train_input_index += 1
             # Reset train_input_index for next iteration if any modification occured

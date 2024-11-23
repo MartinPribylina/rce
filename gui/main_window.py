@@ -10,7 +10,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("RCE Network Demo")
-        self.setGeometry(0, 0, 800, 600)
+        self.setGeometry(0, 0, 1000, 800)
         self.center_on_screen()
 
         self.stack = QStackedWidget()

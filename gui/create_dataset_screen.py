@@ -11,7 +11,7 @@ import json
 class CreateDatasetScreen(QWidget):
     def __init__(self, switch_screen):
         super().__init__()
-
+        self.graph_border = 1.5
         self.switch_screen = switch_screen
         self.input = InputData()
 
@@ -23,7 +23,7 @@ class CreateDatasetScreen(QWidget):
         self.x_input = QLineEdit()
         self.y_input = QLineEdit()
         self.class_input = QComboBox()
-        self.class_input.addItems(["Red", "Green", "Blue"])  # Príklad tried
+        self.class_input.addItems(["Red", "Green", "Blue", "Cyan", "Magenta", "Black"])  # Príklad tried
 
         self.add_point_button = QPushButton("Add Point")
         self.save_button = QPushButton("Save Dataset")
@@ -63,7 +63,15 @@ class CreateDatasetScreen(QWidget):
             point = Point(x, y, self.class_input.currentText())
             self.input.add_point(point)
             self.canvas.ax.scatter(x, y, color=point.get_color(), label=point.class_name)
+            x_values = [point.x for point in self.input.data.values()] if self.input.data else [0]
+            y_values = [point.y for point in self.input.data.values()] if self.input.data else [0]
+            x_min, x_max = min(x_values) - self.graph_border, max(x_values) + self.graph_border
+            y_min, y_max = min(y_values) - self.graph_border, max(y_values) + self.graph_border
+
+            self.canvas.ax.set_xlim(x_min, x_max)
+            self.canvas.ax.set_ylim(y_min, y_max)
             self.canvas.draw()
+
         except AlreadyExists:
             print("Point already exists")
         except ValueError:

@@ -1,7 +1,8 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QFileDialog, QHBoxLayout, QComboBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QFileDialog, QHBoxLayout, QComboBox, QMessageBox
 from PyQt5.QtCore import Qt
 
 from data.input_data import InputData
+from data.json_serializer import JsonSerializer
 from data.my_exceptions import AlreadyExists
 from .styles import get_button_style, get_red_button_style
 from .mpl_canvas import MplCanvas
@@ -38,7 +39,11 @@ class CreateDatasetScreen(QWidget):
         controls_layout.addLayout(general_button_layout)
 
         form_layout = QVBoxLayout()
-        form_layout.addWidget(QLabel("Create or remove points"))
+        heading_label = QLabel("Create or remove points")
+        heading_label.setWordWrap(True)
+        heading_label.setAlignment(Qt.AlignBottom)
+        heading_label.setStyleSheet("font-weight: bold; font-size: 24px; padding-bottom: 10px;")
+        form_layout.addWidget(heading_label)
         x_layout = QHBoxLayout()
         self.x_input = QLineEdit()
         x_layout.addWidget(QLabel("X:"))
@@ -95,7 +100,7 @@ class CreateDatasetScreen(QWidget):
             self.canvas.draw()
 
         except AlreadyExists:
-            print("Point already exists")
+            QMessageBox.warning(self, "Warning", "Point already exists!\nPoint {}".format(point))
         except ValueError:
             print("Invalid input")
 
@@ -103,52 +108,45 @@ class CreateDatasetScreen(QWidget):
         try:
             x = float(self.x_input.text())
             y = float(self.y_input.text())
-            point_key = f"{x}_{y}"
-            if point_key in self.input.data:
-                del self.input.data[point_key]
-                self.redraw_all_points(self.input.data)
-            else:
-                print("Point does not exist")
-
-        except ValueError:
+            point = Point(x, y, self.class_input.currentText())
+            self.input.remove_point(point)
+            self.redraw_all_points()
+        except Exception:
             print("Invalid input")
 
-    def redraw_all_points(self, points):
+    def redraw_all_points(self):
         try:
             self.canvas.ax.cla()
-            for key, point in points.items():
+            for key, point in self.input.data.items():
                 self.canvas.ax.scatter(point.x, point.y, color=point.get_color(), label=point.class_name)
 
             self.canvas.draw()
-        except AlreadyExists:
-            print("Point already exists")
-        except ValueError:
+        except Exception:
             print("Invalid input")
 
     def load_dataset(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self, "Load Dataset", "", "JSON Files (*.json);;All Files (*)", options=options)
-        if file_name:
-            with open(file_name, 'r') as f:
-                parsed_data = json.loads(f.read())
-                self.input = InputData(parsed_data)
-                self.redraw_all_points(self.input.data)
-            print(f"Loaded dataset: {file_name}")
-
-    def custom_serializer(self, obj):
-        if isinstance(obj, InputData):
-            return obj.__dict__
-        if isinstance(obj, Point):
-            return obj.__dict__
-        raise TypeError(f"Type {type(obj)} not serializable")
+        try:
+            if file_name:
+                with open(file_name, 'r') as f:
+                    parsed_data = json.loads(f.read())
+                    self.input = InputData(parsed_data)
+                    self.redraw_all_points()
+                print(f"Loaded dataset: {file_name}")
+        except AlreadyExists:
+            QMessageBox.warning(self, "Warning", "Dataset contains duplicated points!")
+        except Exception as e:
+            QMessageBox.warning(self, "Warning", "An error occurred while loading the dataset!\nError: {}".format(e))
 
     def save_dataset(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Dataset", "", "JSON Files (*.json);;All Files (*)", options=options)
         if file_name:
             with open(file_name, 'w') as f:
-                json_str = json.dumps(self.input, default=self.custom_serializer)
-                print(json_str)
-                f.write(json_str)
+                jsonSerializer = JsonSerializer()
+                json_output = jsonSerializer.serialize(list(self.input.data.values()))
+                print(json_output)
+                f.write(json_output)
 
-            print(f"Dataset saved to {file_name}")
+            QMessageBox.information(self, "Saving Finished", f"Dataset successfully saved to {file_name}!")

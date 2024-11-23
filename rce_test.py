@@ -1,7 +1,6 @@
 import json
 import os
-from rce.rce_network import RceNetwork
-from data.input_data import InputData, Point
+from data.input_data import InputData
 from rce.rce_trainer import RceTrainer
 
 def load_test_data(file_name):
@@ -11,18 +10,15 @@ def load_test_data(file_name):
     return input
 
 def main():
-    # Načítanie testovacích dát
     script_dir = os.path.dirname(__file__)
     training_data :InputData = load_test_data(script_dir + '/test_data.json')
 
-    # Vytvorenie RCE siete
     rce_trainer = RceTrainer()
 
-    # Trénovanie RCE siete
-    print("Training RCE Network with test data...")
+    print("Training RCE Network...")
     rce_trainer.Train(list(training_data.data.values()))
 
-    # Print every network
+    # Print every progress of training - last step is the final network
     for rce_network in rce_trainer.rce_networks:
         print(rce_network)
 

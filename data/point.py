@@ -13,3 +13,10 @@ class Point:
     def __str__(self):
         str = "[{}, {}, class = {}]".format(self.x, self.y, self.class_name)
         return str
+    
+    def to_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "class_name": self.class_name
+        }

@@ -1,11 +1,11 @@
 import json
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog, QMessageBox, QHBoxLayout, QLabel
 from PyQt5.QtCore import Qt
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from rce.rce_network import RceNetwork
-from data.input_data import Point, InputData
+from data.my_exceptions import AlreadyExists
+from gui.mpl_canvas import MplCanvas
+from data.input_data import InputData
 from rce.rce_trainer import RceTrainer
 from .styles import get_button_style
 
@@ -15,18 +15,26 @@ class TrainNetworkScreen(QWidget):
         self.switch_screen = switch_screen
         self.rce_trainer = RceTrainer()
         self.rce_current_network_index = 0
-        self.graph_border = 1.5
+        self.graph_border_offset = 1.5
         self.initUI()
 
     def initUI(self):
+        """
+        Initializes the user interface for the training screen.
+
+        Sets up the main layout with a Matplotlib canvas for visualizing the network,
+        an information label providing instructions, and navigation buttons to control
+        the training process. Includes buttons for loading data, training the network,
+        and navigating through different iterations of training and individual steps 
+        over training points of the training process.
+        """
         main_layout = QVBoxLayout()
 
         # Matplotlib canvas and information layout
         canvas_info_layout = QHBoxLayout()
 
         # Matplotlib canvas
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
+        self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
         canvas_info_layout.addWidget(self.canvas)
 
         # Information label
@@ -97,35 +105,23 @@ class TrainNetworkScreen(QWidget):
     def load_data(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self, "Load Dataset", "", "JSON Files (*.json);;All Files (*)", options=options)
-        if file_name:
-            with open(file_name, 'r') as f:
-                parsed_data = json.loads(f.read())
-                self.input = InputData(parsed_data)
-            self.training_data = list(self.input.data.values())
-            self.plot_data()
-            self.rce_trainer = RceTrainer()
-            self.rce_current_network_index = 0
-            self.info_label.setText("Dataset loaded successfully!\nReady for training.")
-            QMessageBox.information(self, "Loading Finished", "Dataset was loaded successfully!")
-            self.train_network()
-    
-    def plot_data(self):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-
-        # Get the min and max values for x and y
-        x_values = [point.x for point in self.training_data]
-        y_values = [point.y for point in self.training_data]
-        x_min, x_max = min(x_values) - self.graph_border, max(x_values) + self.graph_border
-        y_min, y_max = min(y_values) - self.graph_border, max(y_values) + self.graph_border
-
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
-
-        for point in self.training_data:
-            ax.scatter(point.x, point.y, color=point.class_name)
-
-        self.canvas.draw()
+        
+        try:
+            if file_name:
+                with open(file_name, 'r') as f:
+                    parsed_data = json.loads(f.read())
+                    self.input = InputData(parsed_data)
+                self.training_data = list(self.input.data.values())
+                self.rce_trainer = RceTrainer()
+                self.rce_current_network_index = 0
+                self.info_label.setText("Dataset loaded successfully!\nReady for training.")
+                QMessageBox.information(self, "Loading Finished", "Dataset was loaded successfully!")
+                self.train_network()
+        except AlreadyExists:
+            QMessageBox.warning(self, "Warning", "Dataset contains duplicated points!")
+        except Exception as e:
+            QMessageBox.warning(self, "Warning", "An error occurred while loading the dataset!\nError: {}".format(e))
+        
 
     def train_network(self):
         if hasattr(self, 'training_data'):
@@ -138,34 +134,33 @@ class TrainNetworkScreen(QWidget):
             QMessageBox.warning(self, "Warning", "No training data loaded!")
 
     def plot_network(self):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
+        self.canvas.ax.cla()
 
         # Get the min and max values for x and y
         x_values = [point.x for point in self.training_data]
         y_values = [point.y for point in self.training_data]
-        x_min, x_max = min(x_values) - self.graph_border, max(x_values) + self.graph_border
-        y_min, y_max = min(y_values) - self.graph_border, max(y_values) + self.graph_border
+        x_min, x_max = min(x_values) - self.graph_border_offset, max(x_values) + self.graph_border_offset
+        y_min, y_max = min(y_values) - self.graph_border_offset, max(y_values) + self.graph_border_offset
 
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
+        self.canvas.ax.set_xlim(x_min, x_max)
+        self.canvas.ax.set_ylim(y_min, y_max)
 
         for point in self.training_data:
-            ax.scatter(point.x, point.y, color=point.class_name)
+            self.canvas.ax.scatter(point.x, point.y, color=point.class_name)
 
         current_network = self.rce_trainer.rce_networks[self.rce_current_network_index]
         self.info_label.setText(current_network.__str__())
         for neuron in current_network.hidden_layer:
             circle = plt.Circle((neuron.weights[0], neuron.weights[1]), neuron.activation, color=neuron.output_neuron.class_name, fill=False, linewidth=2)
-            ax.add_artist(circle)
+            self.canvas.ax.add_artist(circle)
         
         if len(current_network.hidden_layer) > 0 and current_network.index_of_hidden_neuron is not None:
             current_hidden_neuron = current_network.hidden_layer[current_network.index_of_hidden_neuron]
             circle = plt.Circle((current_hidden_neuron.weights[0], current_hidden_neuron.weights[1]), current_hidden_neuron.activation, color="yellow", fill=False, linewidth=1)
-            ax.add_artist(circle)
+            self.canvas.ax.add_artist(circle)
 
         current_input = list(self.input.data.values())[current_network.train_input_index if current_network.train_input_index is not None else 0]
-        ax.scatter(current_input.x, current_input.y, s=15, color="yellow")
+        self.canvas.ax.scatter(current_input.x, current_input.y, s=15, color="yellow")
 
         self.canvas.draw()
 

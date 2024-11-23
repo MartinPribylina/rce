@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 
 from data.input_data import InputData
 from data.my_exceptions import AlreadyExists
-from .styles import get_button_style
+from .styles import get_button_style, get_red_button_style
 from .mpl_canvas import MplCanvas
 from data.point import Point
 import json
@@ -15,46 +15,68 @@ class CreateDatasetScreen(QWidget):
         self.switch_screen = switch_screen
         self.input = InputData()
 
-        layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
 
         self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
+        main_layout.addWidget(self.canvas)
 
-        form_layout = QHBoxLayout()
+        controls_widget = QWidget()
+        controls_widget.setMaximumWidth(200)
+        controls_layout = QVBoxLayout()
+        controls_widget.setLayout(controls_layout)
+
+        save_button = QPushButton("Save Dataset")
+        load_button = QPushButton("Load Dataset")
+        back_button = QPushButton("Back")
+        save_button.setStyleSheet(get_button_style())
+        load_button.setStyleSheet(get_button_style())
+        back_button.setStyleSheet(get_button_style())
+        general_button_layout = QVBoxLayout()
+        general_button_layout.addWidget(save_button)
+        general_button_layout.addWidget(load_button)
+        general_button_layout.addWidget(back_button)
+        controls_layout.addLayout(general_button_layout)
+
+        form_layout = QVBoxLayout()
+        form_layout.addWidget(QLabel("Create or remove points"))
+        x_layout = QHBoxLayout()
         self.x_input = QLineEdit()
+        x_layout.addWidget(QLabel("X:"))
+        x_layout.addWidget(self.x_input)
+        form_layout.addLayout(x_layout)
+
+        y_layout = QHBoxLayout()
         self.y_input = QLineEdit()
+        y_layout.addWidget(QLabel("Y:"))
+        y_layout.addWidget(self.y_input)
+        form_layout.addLayout(y_layout)
+
+        class_layout = QHBoxLayout()
         self.class_input = QComboBox()
-        self.class_input.addItems(["Red", "Green", "Blue", "Cyan", "Magenta", "Black"])  # Príklad tried
+        self.class_input.addItems(["Red", "Green", "Blue", "Cyan", "Magenta", "Black"])
+        class_layout.addWidget(QLabel("Class:"))
+        class_layout.addWidget(self.class_input)
+        form_layout.addLayout(class_layout)
 
-        self.add_point_button = QPushButton("Add Point")
-        self.save_button = QPushButton("Save Dataset")
-        self.load_button = QPushButton("Load Dataset")
-        self.back_button = QPushButton("Back")
+        add_point_button = QPushButton("Add Point")
+        add_point_button.setStyleSheet(get_button_style())
+        form_layout.addWidget(add_point_button)
 
-        self.add_point_button.setStyleSheet(get_button_style())
-        self.save_button.setStyleSheet(get_button_style())
-        self.load_button.setStyleSheet(get_button_style())
-        self.back_button.setStyleSheet(get_button_style())
+        remove_point_button = QPushButton("Remove Point")
+        remove_point_button.setStyleSheet(get_red_button_style())
+        form_layout.addWidget(remove_point_button)
 
-        form_layout.addWidget(QLabel("X:"))
-        form_layout.addWidget(self.x_input)
-        form_layout.addWidget(QLabel("Y:"))
-        form_layout.addWidget(self.y_input)
-        form_layout.addWidget(QLabel("Class:"))
-        form_layout.addWidget(self.class_input)
-        form_layout.addWidget(self.add_point_button)
+        controls_layout.addLayout(form_layout)
 
-        layout.addWidget(self.canvas)
-        layout.addLayout(form_layout)
-        layout.addWidget(self.save_button)
-        layout.addWidget(self.load_button)
-        layout.addWidget(self.back_button)
+        main_layout.addWidget(controls_widget)
 
-        self.setLayout(layout)
+        self.setLayout(main_layout)
 
-        self.add_point_button.clicked.connect(self.add_point)
-        self.save_button.clicked.connect(self.save_dataset)
-        self.load_button.clicked.connect(self.load_dataset)
-        self.back_button.clicked.connect(lambda: self.switch_screen("main_menu"))
+        add_point_button.clicked.connect(self.add_point)
+        remove_point_button.clicked.connect(self.remove_point)
+        save_button.clicked.connect(self.save_dataset)
+        load_button.clicked.connect(self.load_dataset)
+        back_button.clicked.connect(lambda: self.switch_screen("main_menu"))
 
     def add_point(self):
         try:
@@ -77,12 +99,26 @@ class CreateDatasetScreen(QWidget):
         except ValueError:
             print("Invalid input")
 
-    def redraw_all_points(self, points : dict[str, Point]):
+    def remove_point(self):
+        try:
+            x = float(self.x_input.text())
+            y = float(self.y_input.text())
+            point_key = f"{x}_{y}"
+            if point_key in self.input.data:
+                del self.input.data[point_key]
+                self.redraw_all_points(self.input.data)
+            else:
+                print("Point does not exist")
+
+        except ValueError:
+            print("Invalid input")
+
+    def redraw_all_points(self, points):
         try:
             self.canvas.ax.cla()
             for key, point in points.items():
                 self.canvas.ax.scatter(point.x, point.y, color=point.get_color(), label=point.class_name)
-                
+
             self.canvas.draw()
         except AlreadyExists:
             print("Point already exists")

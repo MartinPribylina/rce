@@ -29,11 +29,11 @@ class RceNetwork():
         output_message += f"action: {self.action}\n"
         output_message += f"{self.comment}\n"
         output_message += "----------------------\n"
-        output_message += f"r_max: {self.r_max}\n"
-        output_message += f"neurons in hidden layer: {len(self.hidden_layer)}\n"
+        output_message += f"r_max: {self.r_max};"
+        output_message += f"neurons in hidden layer: {len(self.hidden_layer)};"
         output_message += f"neurons in output layer: {len(self.output_layer)}\n"
-        output_message += f"change in network: {self.modification}\n"
-        output_message += f"hit flag: {self.hit}\n"
+        output_message += f"modification: {self.modification};"
+        output_message += f"hit: {self.hit}\n"
         output_message += "hidden layer: "
         for i, item in enumerate(self.hidden_layer):
             output_message += "{}, " .format(item)

@@ -11,7 +11,7 @@ def load_test_data(file_name):
 
 def main():
     script_dir = os.path.dirname(__file__)
-    training_data :InputData = load_test_data(script_dir + '/test_data.json')
+    training_data :InputData = load_test_data(script_dir + '/test_data_4_v4.json')
 
     rce_trainer = RceTrainer()
 

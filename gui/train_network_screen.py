@@ -76,7 +76,7 @@ class TrainNetworkScreen(QWidget):
 
         # R max input
         train_widget = QWidget()
-        train_widget.setMaximumWidth(200)
+        train_widget.setMaximumWidth(400)
         train_layout = QHBoxLayout()
         r_max_label = QLabel("R max:", self)
         self.r_input = QLineEdit()
@@ -137,7 +137,6 @@ class TrainNetworkScreen(QWidget):
         self.info_label = QLabel(info_text, self)
         self.info_label.setAlignment(Qt.AlignTop)
         self.info_label.setStyleSheet("QLabel { background-color : white; border: 1px solid black; }")
-        self.info_label.setFixedWidth(200)
         self.info_label.setWordWrap(True)
 
     def build_button(self, title, function = None):

@@ -11,7 +11,7 @@ class MainMenu(QWidget):
         layout = QVBoxLayout()
         layout.setContentsMargins(50, 100, 50, 100)
 
-        self.train_button = QPushButton("Train RCE Network")
+        self.train_button = QPushButton("Train and Demo RCE Network")
         self.create_dataset_button = QPushButton("Create Training Dataset")
 
         self.train_button.setStyleSheet(get_button_style())

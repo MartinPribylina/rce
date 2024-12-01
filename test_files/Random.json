@@ -1,0 +1,13 @@
+[
+  { "x": 0.5, "y": 0.5, "class_name": "Red" },
+  { "x": 1.5, "y": 1.2, "class_name": "Green" },
+  { "x": 2.2, "y": 0.9, "class_name": "Blue" },
+  { "x": 3.7, "y": 1.5, "class_name": "Magenta" },
+  { "x": 4.1, "y": 0.3, "class_name": "Cyan" },
+  { "x": 0.9, "y": 3.7, "class_name": "Black" },
+  { "x": 2.8, "y": 3.2, "class_name": "Red" },
+  { "x": 3.5, "y": 4.0, "class_name": "Green" },
+  { "x": 4.6, "y": 3.6, "class_name": "Blue" },
+  { "x": 5.2, "y": 4.7, "class_name": "Magenta" },
+  { "x": 1.7, "y": 2.5, "class_name": "Cyan" }
+]

@@ -6,26 +6,26 @@ class InputData:
         self.data = {}
         if points is None:
             return
-        # Iterate over the data and create Point objects
+        # Iterate over the data and create Point
         for point in points:
             x = float(point['x'])
             y = float(point['y'])
-            point = Point(x, y, point['class_name'])  # Create Point object
+            point = Point(x, y, point['class_name'])  # Create Point
             self.add_point(point)  # Add the Point to InputData
 
     def add_point(self, point: Point) -> bool:
         """
-        Adds a point to the InputData object if it does not already exist.
+        Adds a point to the InputData if it does not already exist.
 
         Args:
-            point (Point): The Point object to add to the InputData object.
+            point (Point): The Point to add to the InputData.
 
         Returns:
             bool: True if the point was added successfully, False if the point does not exist or
-            if the point already exists in the InputData object.
+            if the point already exists in the InputData.
 
         Raises:
-            AlreadyExists: If the point already exists in the InputData object.
+            AlreadyExists: If the point already exists in the InputData.
         """
         try:
             if self.contains_point(point):
@@ -39,10 +39,10 @@ class InputData:
     
     def remove_point(self, point: Point) -> bool:
         """
-        Removes a point from the InputData object if it exists.
+        Removes a point from the InputData if it exists.
 
         Args:
-            point (Point): The Point object to remove from the InputData object.
+            point (Point): The Point  to remove from the InputData.
 
         Returns:
             bool: True if the point was successfully removed, False if the point does not exist
@@ -56,16 +56,22 @@ class InputData:
             return True
 
         return False
+    
+    def remove_all_points(self):
+        """
+        Removes all points from the InputData.
+        """
+        self.data.clear()
 
     def contains_point(self, point: Point) -> bool:
         """
-        Checks if a point exists in the InputData object.
+        Checks if a point exists in the InputData.
 
         Args:
-            point (Point): The Point object to check for existence in the InputData object.
+            point (Point): The Point to check for existence in the InputData.
 
         Returns:
-            bool: True if the point exists in the InputData object, False otherwise.
+            bool: True if the point exists in the InputData, False otherwise.
         """
 
         return point.key() in self.data

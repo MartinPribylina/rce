@@ -6,7 +6,7 @@ def get_button_style():
         padding: 15px;
         border: none;
         border-radius: 5px;
-        font-size: 16px;
+        font-size: 20px;
         margin: 10px;
     }
     QPushButton:hover {
@@ -22,7 +22,7 @@ def get_red_button_style():
         padding: 15px;
         border: none;
         border-radius: 5px;
-        font-size: 16px;
+        font-size: 20px;
         margin: 10px;
     }
     QPushButton:hover {
@@ -30,7 +30,7 @@ def get_red_button_style():
     }
     """
 
-def get_font_size_12_style():
+def get_font_size_16_style():
     return """
     QLabel {
         font-size: 16px;

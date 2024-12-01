@@ -1,0 +1,12 @@
+[
+  { "x": 1.0, "y": 1.0, "class_name": "Red" },
+  { "x": 2.0, "y": 2.0, "class_name": "Red" },
+  { "x": 3.0, "y": 3.0, "class_name": "Red" },
+  { "x": 4.0, "y": 4.0, "class_name": "Red" },
+  { "x": 5.0, "y": 5.0, "class_name": "Red" },
+  { "x": 1.0, "y": 5.0, "class_name": "Green" },
+  { "x": 2.0, "y": 4.0, "class_name": "Green" },
+  { "x": 4.0, "y": 2.0, "class_name": "Green" },
+  { "x": 5.0, "y": 1.0, "class_name": "Green" },
+  { "x": 3.0, "y": 2.0, "class_name": "Blue" }
+]

@@ -53,18 +53,20 @@ class RceTrainer:
                     distance = self.calculate_distance(training_point, hidden_neuron)
 
                     # Check if training point is in hidden neuron
-                    if distance <= hidden_neuron.activation:
+                    if distance <= hidden_neuron.radius:
                         # Check if training point class matches hidden neuron class
                         if hidden_neuron.output_neuron.class_name == training_point.class_name:
                             # Classes match - hit = True => no need to create new hidden neuron
                             self.rce_network.hit = True
                             self.rce_network.comment = "Comparing training point {} to hidden neuron {} - hit, class matches".format(training_point, hidden_neuron)
                         else:
-                            # Classes don't match - modfiy hidden neuron activation
+                            # Classes don't match - modfiy hidden neuron activation radius
                             self.rce_network.modification = True
                             self.rce_network.comment = "Comparing training point {} to hidden neuron {} - hit, class doesn't match".format(training_point, hidden_neuron)
-                            hidden_neuron.activation = distance / 2
-                            self.rce_network.comment += " - updating hiddent neuron to {}" .format(self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron])
+                            old_hidden_neuron = copy.deepcopy(hidden_neuron)
+                            hidden_neuron.radius = distance / 2
+                            self.rce_network.comment += " - updating hidden neuron to {}" .format(self.rce_network.hidden_layer[self.rce_network.index_of_hidden_neuron])
+                            self.rce_network.action = "Modifying hidden neuron {} to {}" .format(old_hidden_neuron, hidden_neuron)
                     else:
                         self.rce_network.comment = "Comparing training point {} to hidden neuron {} - no hit".format(training_point, hidden_neuron)
                     # Make a copy of current training progress

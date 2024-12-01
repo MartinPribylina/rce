@@ -1,5 +1,5 @@
 class HiddenNeuron():
-    def __init__(self, weights, activation):
+    def __init__(self, weights, radius):
         """
         Initialize HiddenNeuron with given weights and activation radius.
 
@@ -7,9 +7,9 @@ class HiddenNeuron():
         :param activation: Float, activation radius of the neuron.
         """
         self.weights = weights
-        self.activation = activation
+        self.radius = radius
         self.output_neuron = None
 
     def __str__(self):
-        str = "[{}, r={:.2f}, output={}]" .format(self.weights, self.activation, self.output_neuron)
+        str = "[{}, r={:.2f}, output={}]" .format(self.weights, self.radius, self.output_neuron)
         return str

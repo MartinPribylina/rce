@@ -69,6 +69,10 @@ class CreateDatasetScreen(QWidget):
         remove_point_button.setStyleSheet(get_red_button_style())
         form_layout.addWidget(remove_point_button)
 
+        remove_all_points_button = self.build_button("Remove All", self.remove_all_points)
+        remove_all_points_button.setStyleSheet(get_red_button_style())
+        form_layout.addWidget(remove_all_points_button)
+
         controls_layout.addLayout(form_layout)
 
         main_layout.addWidget(controls_widget)
@@ -118,11 +122,11 @@ class CreateDatasetScreen(QWidget):
         """
         Removes a point from the InputData object if it exists.
 
-        Attempts to extract float values from the x and y input fields, and
-        the class name from the class name input field. If the point exists in
-        the InputData object, it is removed and all points are re-plotted on the
-        graph. If the point does not exist, a warning message is displayed. If
-        the input is invalid, an error message is displayed.
+        Attempts to extract float values from the x and y input fields. 
+        If the point exists in the InputData object, it is removed and 
+        all points are re-plotted on the graph. If the point does not exist, 
+        a warning message is displayed. If the input is invalid, an error message 
+        is displayed.
 
         :return: None
         """
@@ -138,10 +142,19 @@ class CreateDatasetScreen(QWidget):
         except ValueError as e:
             QMessageBox.warning(self, "Warning", "Invalid input: {}".format(e))
 
+    def remove_all_points(self):
+        """
+        Removes all points from the InputData.
+
+        :return: None
+        """
+        self.input.remove_all_points()
+        self.redraw_all_points()
+
     def redraw_all_points(self):
         try:
             self.canvas.ax.cla()
-            for key, point in self.input.data.items():
+            for _, point in self.input.data.items():
                 self.canvas.ax.scatter(point.x, point.y, color=point.get_color(), label=point.class_name)
 
             self.canvas.draw()

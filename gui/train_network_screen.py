@@ -6,7 +6,7 @@ from data.my_exceptions import AlreadyExists
 from gui.mpl_canvas import MplCanvas
 from data.input_data import InputData
 from rce.rce_trainer import RceTrainer
-from .styles import get_button_style, get_font_size_12_style
+from .styles import get_button_style, get_font_size_16_style
 
 info_text = "Welcome to RCE training screen!\n1. Load dataset\n2. Train network\n3. Use arrows to step through the training process\n"
 info_text += "<<< - skips to first training iteration\n>>> - skips to last training iteration\n<< - skips to beggining of iteration or previous training iteration if currently positioned on first training input\n"
@@ -55,12 +55,12 @@ class TrainNetworkScreen(QWidget):
         # Navigation buttons
         nav_layout = QHBoxLayout()
 
-        nav_layout.addWidget(self.build_button("<<<", self.first_epoch))
-        nav_layout.addWidget(self.build_button("<<", self.prev_epoch))
+        nav_layout.addWidget(self.build_button("<<<", self.first_iteration))
+        nav_layout.addWidget(self.build_button("<<", self.prev_iteration))
         nav_layout.addWidget(self.build_button("<", self.prev_step))
         nav_layout.addWidget(self.build_button(">", self.next_step))
-        nav_layout.addWidget(self.build_button(">>", self.next_epoch))
-        nav_layout.addWidget(self.build_button(">>>", self.last_epoch))
+        nav_layout.addWidget(self.build_button(">>", self.next_iteration))
+        nav_layout.addWidget(self.build_button(">>>", self.last_iteration))
 
         main_layout.addLayout(nav_layout)
 
@@ -149,11 +149,11 @@ class TrainNetworkScreen(QWidget):
     def build_progress_info(self):
         progress_info_layout = QVBoxLayout()
         iteration__training_layout = QHBoxLayout()
-        self.iteration_label = self.build_label("Iteration: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
-        self.training_vector_label = self.build_label("Training Vector: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
-        self.filename_label = self.build_label("File Name: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
-        self.action_label = self.build_label("Action: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
-        self.comment_label = self.build_label("Comment: None", alignment = Qt.AlignLeft, style = get_font_size_12_style())
+        self.iteration_label = self.build_label("Iteration: None", alignment = Qt.AlignLeft, style = get_font_size_16_style())
+        self.training_vector_label = self.build_label("Training Vector: None", alignment = Qt.AlignLeft, style = get_font_size_16_style())
+        self.filename_label = self.build_label("File Name: None", alignment = Qt.AlignLeft, style = get_font_size_16_style())
+        self.action_label = self.build_label("Action: None", alignment = Qt.AlignLeft, style = get_font_size_16_style())
+        self.comment_label = self.build_label("Comment: None", alignment = Qt.AlignLeft, style = get_font_size_16_style())
         iteration__training_layout.addWidget(self.iteration_label)
         iteration__training_layout.addWidget(self.training_vector_label)
         iteration__training_layout.addWidget(self.filename_label)
@@ -238,14 +238,14 @@ class TrainNetworkScreen(QWidget):
         self.info_label.setText(current_network.__str__())
         # Show neurons
         for neuron in current_network.hidden_layer:
-            circle = plt.Circle((neuron.weights[0], neuron.weights[1]), neuron.activation, color=neuron.output_neuron.class_name, fill=False, linewidth=3)
+            circle = plt.Circle((neuron.weights[0], neuron.weights[1]), neuron.radius, color=neuron.output_neuron.class_name, fill=False, linewidth=3)
             self.canvas.ax.add_artist(circle)
 
         if self.rce_current_network_index != len(self.rce_trainer.rce_networks) - 1 and self.rce_current_network_index != 0:
             # Show current action
             if len(current_network.hidden_layer) > 0 and current_network.index_of_hidden_neuron is not None:
                 current_hidden_neuron = current_network.hidden_layer[current_network.index_of_hidden_neuron]
-                circle = plt.Circle((current_hidden_neuron.weights[0], current_hidden_neuron.weights[1]), current_hidden_neuron.activation, color="yellow", fill=False, linewidth=1)
+                circle = plt.Circle((current_hidden_neuron.weights[0], current_hidden_neuron.weights[1]), current_hidden_neuron.radius, color="yellow", fill=False, linewidth=1)
                 self.canvas.ax.add_artist(circle)
 
             current_input = list(self.input.data.values())[current_network.train_input_index if current_network.train_input_index is not None else 0]
@@ -262,19 +262,19 @@ class TrainNetworkScreen(QWidget):
             return False
         return True
 
-    def first_epoch(self):
+    def first_iteration(self):
         if not self.can_click_arrows():
             return
         self.rce_current_network_index = 0
         self.plot_network()
 
-    def last_epoch(self):
+    def last_iteration(self):
         if not self.can_click_arrows():
             return
         self.rce_current_network_index = len(self.rce_trainer.rce_networks) - 1
         self.plot_network()
 
-    def prev_epoch(self):
+    def prev_iteration(self):
         if not self.can_click_arrows():
             return
         current_network = self.rce_trainer.rce_networks[self.rce_current_network_index]
@@ -285,7 +285,10 @@ class TrainNetworkScreen(QWidget):
         while self.rce_current_network_index > 0:
             self.rce_current_network_index -= 1
             current_network = self.rce_trainer.rce_networks[self.rce_current_network_index]
-            if current_network.train_input_index == 0 and current_network.index_of_hidden_neuron == 0:
+            prev_network_same_iteration = False
+            if self.rce_current_network_index - 1 >= 0:
+                prev_network_same_iteration = self.rce_trainer.rce_networks[self.rce_current_network_index - 1].iteration == current_network.iteration
+            if current_network.train_input_index == 0 and current_network.index_of_hidden_neuron == 0 and not prev_network_same_iteration:
                 break
         self.plot_network()
 
@@ -303,13 +306,14 @@ class TrainNetworkScreen(QWidget):
             self.rce_current_network_index += 1
             self.plot_network()
 
-    def next_epoch(self):
+    def next_iteration(self):
         if not self.can_click_arrows():
             return
+        next_iteration = self.rce_trainer.rce_networks[self.rce_current_network_index].iteration + 1
         while self.rce_current_network_index < len(self.rce_trainer.rce_networks) - 1:
             self.rce_current_network_index += 1
             current_network = self.rce_trainer.rce_networks[self.rce_current_network_index]
-            if current_network.train_input_index == 0 and current_network.index_of_hidden_neuron == 0:
+            if current_network.iteration == next_iteration:
                 break
         self.plot_network()
 

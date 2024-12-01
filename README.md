@@ -83,11 +83,11 @@ V hlavnom menu si môžete vybrať medzi trénovaním RCE siete a vytváraním d
     - **rce_network.py**: RCE sieť, umožňuje pridávanie nových neurónov. Obsahuje vrstvu hidden a ouput neuronov, flagy o modifikácii siete, hit, maximálnu veľkosť polomeru aktivačnej funkcie neurónov, index trénovacej sady a index skrytého neuronu. Umožňuje detailny výpis všetkých podstatných informácii.
     - **hidden_neuron.py**: Skrytý neuron RCE siete.
     - **output_neuron.py**: Výstupný neuron RCE siete.
-  - **.gitignore**: Súbor určujúci, ktoré súbory a adresáre by mali byť ignorované GIT-om.
   - **main.py**: Hlavný skript na spustenie aplikácie.
   - **rce_text.py**: Vedľajší skript na tréning siete a výpis výstupov trénovania na konzolu.
-  - **README.md**: Dokumentácia projektu.
   - **requirements.txt**: Zoznam potrebných Python knižníc.
+  - **.gitignore**
+  - **README.md**
 
 ## Autor
 
